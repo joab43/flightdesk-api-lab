@@ -1,0 +1,16 @@
+# .dockerignore raíz: usado si alguien construye desde la raíz.
+# Los builds normales usan backend/.dockerignore y frontend/.dockerignore.
+.git
+.gitignore
+.dockerignore
+.env
+.env.*
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/node_modules
+**/data
+**/*.db
+docs
+scripts
+tests

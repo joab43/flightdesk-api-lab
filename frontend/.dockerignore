@@ -1,0 +1,14 @@
+# Evita copiar archivos innecesarios al contexto de construcción del frontend.
+.git
+.gitignore
+.dockerignore
+*.md
+.env
+.env.*
+!*.html
+!*.css
+!*.js
+!nginx.conf
+!Dockerfile
+node_modules
+__pycache__

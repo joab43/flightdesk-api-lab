@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FlightDesk API Lab</title>
+  <meta name="description" content="Laboratorio educativo de API REST: gestión de vuelos">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">✈</span>
+      <div>
+        <h1>FlightDesk API Lab</h1>
+        <p class="subtitle">Laboratorio educativo de API REST</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <span id="api-status" class="status-pill status-unknown" title="Estado del backend">API: verificando…</span>
+      <button id="refresh-btn" class="btn btn-secondary" type="button">↻ Actualizar</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Panel de estadísticas -->
+    <section aria-label="Estadísticas" class="stats-grid">
+      <article class="stat-card">
+        <span class="stat-value" id="stat-total">–</span>
+        <span class="stat-label">Vuelos totales</span>
+      </article>
+      <article class="stat-card stat-scheduled">
+        <span class="stat-value" id="stat-scheduled">–</span>
+        <span class="stat-label">Programados</span>
+      </article>
+      <article class="stat-card stat-boarding">
+        <span class="stat-value" id="stat-boarding">–</span>
+        <span class="stat-label">Abordando</span>
+      </article>
+      <article class="stat-card stat-delayed">
+        <span class="stat-value" id="stat-delayed">–</span>
+        <span class="stat-label">Retrasados</span>
+      </article>
+    </section>
+
+    <!-- Listado con filtros -->
+    <section class="panel" aria-label="Vuelos">
+      <div class="panel-header">
+        <h2>Vuelos</h2>
+        <form id="filter-form" class="filters" role="search">
+          <input id="filter-search" type="search" name="search"
+                 placeholder="Buscar vuelo, origen o destino…" autocomplete="off">
+          <input id="filter-origin" type="text" name="origin" maxlength="3"
+                 placeholder="Orig. (PTY)" aria-label="Código de origen">
+          <input id="filter-destination" type="text" name="destination" maxlength="3"
+                 placeholder="Dest. (MIA)" aria-label="Código de destino">
+          <select id="filter-status" name="status" aria-label="Estado">
+            <option value="">Todos los estados</option>
+            <option value="SCHEDULED">Programado</option>
+            <option value="BOARDING">Abordando</option>
+            <option value="DEPARTED">Salido</option>
+            <option value="ARRIVED">Llegado</option>
+            <option value="DELAYED">Retrasado</option>
+            <option value="CANCELLED">Cancelado</option>
+          </select>
+          <button class="btn btn-secondary" type="button" id="clear-filters">Limpiar</button>
+        </form>
+      </div>
+
+      <div class="table-wrap">
+        <table id="flights-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Vuelo</th>
+              <th>Ruta</th>
+              <th>Salida</th>
+              <th>Llegada</th>
+              <th>Estado</th>
+              <th class="actions-col">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="flights-body"></tbody>
+        </table>
+        <p id="empty-state" class="empty-state" hidden>No hay vuelos que coincidan con los filtros.</p>
+      </div>
+    </section>
+
+    <!-- Crear vuelo -->
+    <section class="panel" aria-label="Crear vuelo">
+      <h2>Crear vuelo</h2>
+      <form id="create-form" class="flight-form">
+        <div class="form-grid">
+          <label>
+            Número de vuelo
+            <input name="flight_number" required maxlength="8"
+                   pattern="[A-Za-z0-9]{2,8}" placeholder="AV101">
+          </label>
+          <label>
+            Origen (código IATA)
+            <input name="origin" required maxlength="3" pattern="[A-Za-z]{3}" placeholder="PTY">
+          </label>
+          <label>
+            Destino (código IATA)
+            <input name="destination" required maxlength="3" pattern="[A-Za-z]{3}" placeholder="MIA">
+          </label>
+          <label>
+            Estado
+            <select name="status">
+              <option value="SCHEDULED">Programado</option>
+              <option value="BOARDING">Abordando</option>
+              <option value="DEPARTED">Salido</option>
+              <option value="ARRIVED">Llegado</option>
+              <option value="DELAYED">Retrasado</option>
+              <option value="CANCELLED">Cancelado</option>
+            </select>
+          </label>
+          <label>
+            Salida (UTC)
+            <input name="departure_time" type="datetime-local" required>
+          </label>
+          <label>
+            Llegada (UTC)
+            <input name="arrival_time" type="datetime-local" required>
+          </label>
+        </div>
+        <button class="btn btn-primary" type="submit">Crear vuelo</button>
+      </form>
+    </section>
+  </main>
+
+  <!-- Diálogo de edición -->
+  <dialog id="edit-dialog" class="edit-dialog">
+    <form method="dialog" id="edit-form" class="flight-form">
+      <h2>Editar vuelo <span id="edit-id" class="muted"></span></h2>
+      <input type="hidden" name="id">
+      <div class="form-grid">
+        <label>
+          Número de vuelo
+          <input name="flight_number" required maxlength="8" pattern="[A-Za-z0-9]{2,8}">
+        </label>
+        <label>
+          Origen
+          <input name="origin" required maxlength="3" pattern="[A-Za-z]{3}">
+        </label>
+        <label>
+          Destino
+          <input name="destination" required maxlength="3" pattern="[A-Za-z]{3}">
+        </label>
+        <label>
+          Estado
+          <select name="status">
+            <option value="SCHEDULED">Programado</option>
+            <option value="BOARDING">Abordando</option>
+            <option value="DEPARTED">Salido</option>
+            <option value="ARRIVED">Llegado</option>
+            <option value="DELAYED">Retrasado</option>
+            <option value="CANCELLED">Cancelado</option>
+          </select>
+        </label>
+        <label>
+          Salida (UTC)
+          <input name="departure_time" type="datetime-local" required>
+        </label>
+        <label>
+          Llegada (UTC)
+          <input name="arrival_time" type="datetime-local" required>
+        </label>
+      </div>
+      <div class="dialog-actions">
+        <button class="btn btn-secondary" type="button" id="edit-cancel">Cancelar</button>
+        <button class="btn btn-primary" type="submit">Guardar cambios</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Superposición de carga y notificaciones -->
+  <div id="loading-overlay" class="loading-overlay" hidden>
+    <div class="spinner" role="status" aria-label="Cargando"></div>
+  </div>
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

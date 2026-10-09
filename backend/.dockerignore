@@ -1,0 +1,15 @@
+# Evita copiar archivos innecesarios (y secretos) al contexto de construcción.
+.git
+.gitignore
+.dockerignore
+*.md
+.env
+.env.*
+__pycache__
+*.pyc
+.pytest_cache
+tests
+data
+*.db
+venv
+.venv

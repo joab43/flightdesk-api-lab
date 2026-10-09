@@ -1,0 +1,57 @@
+# FlightDesk API Lab — orquestación con Docker Compose.
+#
+# Servicios:
+#   frontend : nginx (estáticos + proxy inverso de /api/ -> backend)
+#   backend  : FastAPI + SQLite persistente en volumen
+#
+# Nota sobre variables: docker compose lee automáticamente el archivo
+# .env del directorio del proyecto para resolver ${VAR}. Copia
+# .env.example a .env y ajusta los puertos si lo necesitas.
+
+name: flightdesk-api-lab
+
+services:
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    environment:
+      FLIGHTDESK_DATABASE_URL: ${FLIGHTDESK_DATABASE_URL:-sqlite:////app/data/flights.db}
+      FLIGHTDESK_CORS_ORIGINS: ${FLIGHTDESK_CORS_ORIGINS:-http://localhost:8080,http://127.0.0.1:8080}
+      FLIGHTDESK_DEMO_SEED: ${FLIGHTDESK_DEMO_SEED:-true}
+      FLIGHTDESK_LOG_LEVEL: ${FLIGHTDESK_LOG_LEVEL:-INFO}
+      FLIGHTDESK_SLOW_REQUEST_MS: ${FLIGHTDESK_SLOW_REQUEST_MS:-500}
+      FLIGHTDESK_ENVIRONMENT: ${FLIGHTDESK_ENVIRONMENT:-development}
+    volumes:
+      # Persistencia: los datos sobreviven a "docker compose down"
+      # (pero no a "docker compose down -v", que elimina el volumen).
+      - flightdesk_data:/app/data
+    ports:
+      # Publica el puerto del backend en tu máquina (útil para probar
+      # la API directamente con curl). Internamente, el servicio se
+      # comunica por la red Docker sin necesidad de este mapeo.
+      - "${BACKEND_PORT:-8000}:8000"
+    networks:
+      - flightdesk_net
+    # El healthcheck del Dockerfile (GET /api/v1/health) se usa
+    # también aquí para ordenar el arranque del frontend.
+
+  frontend:
+    build:
+      context: ./frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_PORT:-8080}:8080"
+    networks:
+      - flightdesk_net
+
+volumes:
+  flightdesk_data:
+    name: flightdesk_data
+
+networks:
+  flightdesk_net:
+    name: flightdesk_net

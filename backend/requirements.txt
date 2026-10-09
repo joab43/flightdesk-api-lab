@@ -1,0 +1,10 @@
+# Dependencias fijadas (pinning) para reproducibilidad.
+# fastapi trae consigo pydantic y starlette compatibles.
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+SQLAlchemy==2.0.36
+
+# Dependencias de prueba (también instaladas en la imagen para
+# poder ejecutar el smoke test dentro del contenedor si se desea).
+pytest==8.3.4
+httpx==0.28.1

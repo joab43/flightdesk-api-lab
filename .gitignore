@@ -1,0 +1,21 @@
+# ── Python ──────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# ── Datos locales (¡NUNCA subir bases de datos a Git!) ──
+data/
+*.db
+*.db-journal
+*.sqlite3
+
+# ── Configuración que puede contener valores locales ────
+.env
+
+# ── Sistema operativo / IDE ─────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
